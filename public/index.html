@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOC Live Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <circle cx="11" cy="11" r="10" stroke="#e84040" stroke-width="1.5"/>
+        <circle cx="11" cy="11" r="6" stroke="#e84040" stroke-width="1" stroke-dasharray="3 2"/>
+        <circle cx="11" cy="11" r="2.5" fill="#e84040"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-name">SOC Console</div>
+      <div class="brand-sub">Live Analysis</div>
+    </div>
+  </div>
+
+  <div class="sidebar-section-label">Navigation</div>
+  <nav class="sidebar-nav">
+    <a class="nav-item active" onclick="showPage('upload')" href="#">
+      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><path d="M8 2v8M5 5l3-3 3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v1a2 2 0 002 2h8a2 2 0 002-2v-1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      Upload Logs
+    </a>
+    <a class="nav-item" onclick="showPage('overview')" href="#" id="nav-overview">
+      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="9" y="1" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="1" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="9" y="9" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item" onclick="showPage('findings')" href="#" id="nav-findings">
+      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><path d="M8 1L2 4v4c0 3.3 2.5 6.4 6 7 3.5-.6 6-3.7 6-7V4L8 1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+      Findings
+    </a>
+    <a class="nav-item" onclick="showPage('intel')" href="#" id="nav-intel">
+      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Threat Intel
+    </a>
+    <a class="nav-item" onclick="showPage('logs')" href="#" id="nav-logs">
+      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 6h6M5 8.5h4M5 11h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Log Viewer
+    </a>
+    <a class="nav-item" onclick="showPage('report')" href="#" id="nav-report">
+      <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><path d="M10 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V5l-3-3z" stroke="currentColor" stroke-width="1.2"/><path d="M10 2v3h3M6 8h4M6 10.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Incident Report
+    </a>
+  </nav>
+
+  <div class="sidebar-status-group">
+    <div class="sidebar-section-label">System</div>
+    <div class="sidebar-status"><div class="status-dot active"></div><span>Server Online</span></div>
+    <div class="sidebar-status" id="api-status"><div class="status-dot warn"></div><span>API Key Unchecked</span></div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main" id="main">
+  <header class="topbar">
+    <button class="menu-toggle" onclick="toggleSidebar()">
+      <svg width="18" height="18" fill="none" viewBox="0 0 18 18"><path d="M2 4h14M2 9h14M2 14h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <div class="topbar-title" id="page-title">Upload Logs</div>
+    <div class="topbar-right">
+      <div class="alert-badge" id="alert-badge" style="display:none">
+        <svg width="14" height="14" fill="none" viewBox="0 0 14 14"><path d="M7 1l6 11H1L7 1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 6v3M7 10.5v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        <span id="alert-count">0</span> Critical
+      </div>
+      <div class="topbar-tlp">TLP:AMBER</div>
+    </div>
+  </header>
+
+  <div class="content-area">
+
+    <!-- ===== UPLOAD PAGE ===== -->
+    <section class="page active" id="page-upload">
+      <div class="page-intro">
+        <h1>Upload <span class="accent">Log Files</span></h1>
+        <p>Drop your real log files below. Supports SSH auth logs, Apache access logs, and Windows Event Log exports (.log, .txt).</p>
+      </div>
+
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" id="file-input" multiple accept=".log,.txt,.csv" style="display:none" onchange="handleFiles(this.files)" />
+        <div class="upload-icon">
+          <svg width="40" height="40" fill="none" viewBox="0 0 40 40"><path d="M20 8v16M13 15l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 28v3a3 3 0 003 3h22a3 3 0 003-3v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="upload-text">Drag & drop log files here</div>
+        <div class="upload-sub">or <span class="upload-link" onclick="document.getElementById('file-input').click()">browse files</span></div>
+        <div class="upload-types">SSH auth.log · Apache access.log · Windows Event Log .txt export</div>
+      </div>
+
+      <div id="file-list" class="file-list" style="display:none"></div>
+
+      <div class="upload-actions" id="upload-actions" style="display:none">
+        <button class="btn-primary" onclick="analyzeFiles()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 14 14"><path d="M2 7h10M7 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Analyze Logs
+        </button>
+        <button class="btn-ghost" onclick="clearFiles()">Clear</button>
+      </div>
+
+      <div id="upload-progress" class="progress-wrap" style="display:none">
+        <div class="progress-label" id="progress-label">Parsing logs...</div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+
+      <!-- Sample log box -->
+      <div class="sample-box">
+        <div class="sample-title">Don't have log files? Use sample data</div>
+        <div class="sample-desc">Load pre-built sample logs simulating a real brute-force incident to see the dashboard in action.</div>
+        <button class="btn-ghost" onclick="loadSampleData()">Load Sample Logs</button>
+      </div>
+    </section>
+
+    <!-- ===== DASHBOARD ===== -->
+    <section class="page" id="page-overview">
+      <div class="page-intro">
+        <h1>Live <span class="accent">Dashboard</span></h1>
+        <p id="dash-subtitle">Analysis results from your uploaded logs.</p>
+      </div>
+      <div class="kpi-row" id="kpi-row"></div>
+      <div class="charts-grid" id="charts-grid">
+        <div class="chart-card wide">
+          <div class="chart-header"><div class="chart-title">Events by Severity</div></div>
+          <div class="chart-wrap" style="height:200px"><canvas id="c-severity-bar"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">Top Source IPs</div></div>
+          <div class="chart-wrap" style="height:220px"><canvas id="c-top-ips"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div class="chart-title">Log Type Distribution</div></div>
+          <div class="chart-wrap" style="height:220px"><canvas id="c-log-types"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FINDINGS ===== -->
+    <section class="page" id="page-findings">
+      <div class="page-intro">
+        <h1>Threat <span class="accent">Findings</span></h1>
+        <p>Automatically detected from your log files.</p>
+      </div>
+      <div id="findings-container"><div class="empty-state">Upload and analyze log files to see findings.</div></div>
+    </section>
+
+    <!-- ===== THREAT INTEL ===== -->
+    <section class="page" id="page-intel">
+      <div class="page-intro">
+        <h1>Threat <span class="accent">Intelligence</span></h1>
+        <p>Live AbuseIPDB reputation checks on IPs extracted from your logs.</p>
+      </div>
+      <div id="intel-container"><div class="empty-state">Upload logs first, then threat intel lookups will run automatically.</div></div>
+    </section>
+
+    <!-- ===== LOG VIEWER ===== -->
+    <section class="page" id="page-logs">
+      <div class="page-intro">
+        <h1>Log <span class="accent">Viewer</span></h1>
+        <p>Parsed events from uploaded files. Filter by severity or search any field.</p>
+      </div>
+      <div class="log-controls">
+        <input class="log-search" id="log-search" type="text" placeholder="Search events... IP, user, path" oninput="filterLogViewer()" />
+        <select class="log-filter" id="sev-filter" onchange="filterLogViewer()">
+          <option value="">All Severities</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+          <option value="info">Info</option>
+        </select>
+      </div>
+      <div class="log-terminal" id="log-terminal">
+        <div class="empty-state" style="padding:2rem">No log events yet. Upload files to populate the viewer.</div>
+      </div>
+    </section>
+
+    <!-- ===== INCIDENT REPORT ===== -->
+    <section class="page" id="page-report">
+      <div class="page-intro">
+        <h1>Incident <span class="accent">Report</span></h1>
+        <p>Auto-generated from your analysis. Review and export.</p>
+      </div>
+      <div id="report-container"><div class="empty-state">Run an analysis first to generate an incident report.</div></div>
+    </section>
+
+  </div>
+</main>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
